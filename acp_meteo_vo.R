@@ -1,3 +1,5 @@
+# based on the dataset data.csv.xslx, uploaded on the drive by Arthur
+
 
 # install.packages('FactoMineR')
 library(FactoMineR)
