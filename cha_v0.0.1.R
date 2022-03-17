@@ -3,6 +3,9 @@ library(dplyr)
 library(ggplot2)
 library(cluster)
 par(mfrow=c(1,1))
+
+# Les noms des villes sont trop longs. Pour faciliter la lecture, j'ai remplacé les noms par les chiffres. "ref" est pour voir quelle ville correspond à quel chiffre.
+
 #------------------"donnees"----------------------------------
 # load dataset in relative path
 setwd("C:/Users/eziod/Pictures/S8/Tronc commun/ADD/Project/") # change it to your path
