@@ -9,7 +9,7 @@ library(ggrepel)
 setwd("D:/2018-2023/S8/Tronc commun/ADD/ADD_projet/nutrient") # change it to your path
 d <- read_csv("nndb_flat.csv") # import dataset
 d<-d[,8:(d%>%length)] # drop the non-numeric columns
-
+d<-d[,1:((d%>%length)-15)] # drop highly correlated columns
 
 PCA(as.matrix(d))
 
