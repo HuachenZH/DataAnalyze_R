@@ -5,13 +5,31 @@ library(dplyr)
 library(ggplot2)
 library(ggrepel)
 
-
+#--------------------prepare dataset-----------------
 setwd("D:/2018-2023/S8/Tronc commun/ADD/ADD_projet/nutrient") # change it to your path
 d <- read_csv("nndb_flat.csv") # import dataset
+foodGroup<-as.matrix(d[,2])
 d<-d[,8:(d%>%length)] # drop the non-numeric columns
 d<-d[,1:((d%>%length)-15)] # drop highly correlated columns
 
+#-------------------PCA()----------------
 PCA(as.matrix(d))
+
+
+# -----------------prcomp()----------------
+# https://www.datacamp.com/community/tutorials/pca-analysis-r
+d.pca<-prcomp(d)
+
+# # to install ggbiplot
+# library(devtools)
+# install_github("vqv/ggbiplot")
+library(ggbiplot) # ggbiplot: Biplot for Principal Components using ggplot2
+ggbiplot(d.pca)
+# PC1 and PC2:
+ggbiplot(d.pca, groups=foodGroup, ellipse=TRUE) # ellips=True...Error: object True not found
+# pC3 and PC4:
+ggbiplot(d.pca, choices=c(3,4))
+
 
 #------------------PCA fait à la maison------------------
 # define standard deviation of population
@@ -44,6 +62,15 @@ dscor<-cor(ds)
 # eigen
 eigen<-eigen(dscor) # pas compris pq mais c'est correct
 evn<-eigen$vectors # matrix P, evn for eigen vector normalized
+    #plot the first two columns energy and protein, with original data
+    plot(x=ds$Energy_kcal, y=ds$Protein_g, xlim=c(-5,5),ylim=c(-5,5),xlab='Energy_kcal',ylab='Protein_g',main='standardized')
+    abline(h=0,v=0)
+    
+    #plot the first two columns, after projected to eigenvector
+    C<-as.matrix(ds)%*%evn  # %*% is for matrix multiplication
+    plot(x=C[,1], y=C[,2], xlim=c(-5,5),ylim=c(-5,5),xlab='Energy_kcal',ylab='Protein_g',main='standardized+projected to eigenvector')
+    abline(h=0,v=0)
+    
 # not sure if the matrix of eigen vector is already normalized
 nvec<-rep(0,evn%>%ncol)
 for (i in 1:(evn%>%ncol)){
@@ -53,7 +80,7 @@ for (i in 1:(evn%>%ncol)){
   evn[,i]<-evn[,i]/nvec[i] # normalize the matrix
 }
 
-#------------------------"C"-------------------------
+# "C"
 # C=A*P ou X*P
 # A ou X matrice centree reduite, P matrice de vect propre reduite
 C<-as.matrix(ds)%*%evn  # %*% is for matrix multiplication
@@ -119,3 +146,12 @@ ggplot() + geom_path(data = corcir, aes(x = x, y = y), colour = "gray65") +
   xlim(-1.1, 1.1) + ylim(-1.1, 1.1) + 
   labs(x = "pc1 aixs", y = "pc2 axis") + 
   ggtitle("Circle of correlations")
+
+
+
+
+#---------------test----------
+
+
+
+
