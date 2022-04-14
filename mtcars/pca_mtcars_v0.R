@@ -1,6 +1,7 @@
 # cf https://caoyang.tech/zh/post/pricinple-component-analysis/
 #--------------PCA analysis--------------
 library(ggbiplot)
+library(dplyr)
 mtcars_pca <- prcomp(select(mtcars, -c("vs", "am")),center = TRUE, scale = TRUE) 
 # select: select variables byby name. Negative values to drop variables.
 # if the first expression is negative, select() will automatically start with all variables
@@ -11,7 +12,7 @@ summary(mtcars_pca)
 
 #-------------visualize the result--------------
 library(ggbiplot)
-# ggbiplot est dédié pour pca, si on regarde dans sa documentation, il ne prend que l'objet de prcomp ou princomp comme parametre
+# ggbiplot est dÃ©diÃ© pour pca, si on regarde dans sa documentation, il ne prend que l'objet de prcomp ou princomp comme parametre
 
 ggbiplot(mtcars_pca,var.axes = FALSE) # no arrows, only points
 ggbiplot(mtcars_pca, circle = TRUE) # with arrows
