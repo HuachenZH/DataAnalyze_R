@@ -1,13 +1,12 @@
 # cf https://caoyang.tech/zh/post/pricinple-component-analysis/
 #--------------PCA analysis--------------
-library(ggbiplot)
 library(dplyr)
 mtcars_pca <- prcomp(select(mtcars, -c("vs", "am")),center = TRUE, scale = TRUE) 
 # select: select variables byby name. Negative values to drop variables.
 # if the first expression is negative, select() will automatically start with all variables
 # cf: https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/select
 
-summary(mtcars_pca) 
+mtcars_pca%>%summary
 # with summary, we can see the proportion of variance and the cumulative proportion
 
 #-------------visualize the result--------------
