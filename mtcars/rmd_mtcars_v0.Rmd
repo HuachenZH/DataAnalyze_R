@@ -1,0 +1,225 @@
+---
+title: "PCA and hc tutorial, feat. mtcars"
+author: "ej2pi"
+date: '2022-04-08'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+挫败。无力。我好失败。不想再花更多时间了。放弃吧。
+
+Préambule: je n'ai pas pris le dataset de météo pour ce markdown. Sorry Arthur et Oriane. J'ai trouvé un dataset parfait pour pca, mais avec 8000 ligne, pas pratique pour faire une version 0. Donc au final j'ai pris un dataset interne de R. mtcars. En ligne: voiture de différent marques et modèles. En colonne: paramètre de voiture.
+
+
+Je ne suis pas l'orgine de certaine partie du code. référence:
+https://caoyang.tech/zh/post/pricinple-component-analysis/
+
+Réaliser PCA en R n'est pas dur, il y a des libraries pré-défini.
+Dans cette article, on va d'abord essayer de comprendre qu'est-ce qu'un PCA (je ne l'ai tjrs pas compris... meme si j'ai codé tout ça...), puis voir comment réaliser PCA étape par étape en R.
+
+## Comprendre PCA
+### Dataset
+Le dataset que l'on va utiliser:
+```{r p1}
+mtcars
+```
+C'est un dataset prédéfini dans R, il n'est pas très grand, donc facile à manipuler.
+Les variables sont des modèles de voitures (ligne), les features sont des charactéristiques de voiture (colonne).
+
+### PCA:
+Il y a trois moyen pour faire PCA en R: PCA(), prcomp(), ou à la main.
+Dans cet exemple on utilise prcomp()
+```{r p2, message=FALSE}
+library(dplyr)
+mtcars_pca <- prcomp(select(mtcars, -c("vs", "am")),center = TRUE, scale = TRUE) 
+summary(mtcars_pca)
+# select: select variables byby name. Negative values to drop variables.
+# if the first expression is negative, select() will automatically start with all variables
+# cf: https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/select
+```
+Fini. L'analyse est faite. Une ligne de code suffit.
+Ce qui est dur est de visualiser et interpreter le résultat.
+
+L'importance est dans output de summary(), on peut voir PC1 et PC2 représente 86% de tous les feature.
+
+On va faire trois plot, le premier n'a que des points, le 2e contient les flèches, le 3e contient les libellés.
+```{r p3, message=FALSE}
+library(ggbiplot)
+# ggbiplot est dédié pour pca, si on regarde dans sa documentation, il ne prend que l'objet de prcomp ou princomp comme parametre
+ggbiplot(mtcars_pca,var.axes = FALSE) # no arrows, only points
+ggbiplot(mtcars_pca, circle = TRUE) # with arrows
+ggbiplot(mtcars_pca, labels=rownames(mtcars), circle = TRUE,alpha=1) # with label names
+```
+
+Puis on peut regrouper les voitures avec leurs pays d'origines.
+```{r p4}
+# regroup the cars with their countries
+mtcars_country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+ggbiplot(mtcars_pca,ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars_country)
+```
+
+Par défaut, dans ggbiplot, il montre le premier et le deuxième composant principal. On peut voir les autres composants, en précisant choice=c(x,y):
+```{r p5  }
+# the third and forth principal components
+ggbiplot(mtcars_pca,ellipse=TRUE,choices=c(3,4), alpha=1,  labels=rownames(mtcars), groups=mtcars_country)
+```
+
+
+
+
+## Hierarchical clustering
+dendrogramme
+
+Attention, ne mets pas une base de données de plus de 8000 lignes, ta RAM risque de se faire pincer très fort.
+....
+```{r p6}
+#--------------------hc-------------------
+
+library(cluster)
+# without scale
+hc<-hclust(mtcars%>%dist,method="ward.D")
+plot(hc)
+#with scale
+hc<-hclust(mtcars%>%scale%>%dist,method="ward.D") 
+plot(hc)
+
+#----------------hc: with rectangles------------------
+nbr_rectangle=4
+plot(hc)
+rect.hclust(hc,k=nbr_rectangle,border='red')
+```
+
+
+
+## Faire PCA à la main, étape par étape:
+...flemme d'expliquer
+此部分纯属炫技，并无营养。
+```{r p7}
+library(FactoMineR)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+# define standard deviation of population
+sd.p=function(x){sd(x)*sqrt((length(x)-1)/length(x))}
+d<-mtcars
+# "X"
+# standardize --> code must can be optimized
+# mean vector
+meanvec<-cbind(1:(d%>%length))%>%as.numeric
+for (i in 1:(d%>%length)){
+  meanvec[i]<-d[,i]%>%unlist%>%mean
+}
+# standard deviation vector    
+sdpvec<-meanvec #sdp for standard deviation of population
+for (i in 1:(d%>%length)){
+  sdpvec[i]<-d[,i]%>%unlist%>%sd.p
+}
+# standardize
+ds<-d # ds for dataframe.standardized
+for (i in 1:(d%>%length)){
+  ds[,i]<-(ds[,i]-rep(1,d%>%nrow)*meanvec[i])/sdpvec[i] # nrow returns row number
+}
+
+# "R"
+# correlation matrix
+dscor<-cor(ds)
+
+
+# "LAM et P"
+# eigen
+eigen<-eigen(dscor) # pas compris pq mais c'est correct
+evn<-eigen$vectors # matrix P, evn for eigen vector normalized
+    #plot the first two columns, with original data
+    plot(x=as.matrix(ds)[,1], y=as.matrix(ds)[,2],xlab='mpg',ylab='cyl',main='standardized')
+    abline(h=0,v=0)
+    # le graphe semble bizarre donc je le re plot une 2e fois avec une 2e methode
+    ggplot(ds,aes(x=mpg,y=cyl))+geom_point()
+    # encore la meme chose. en fait le graphe est correcte 
+    
+    #plot the first two columns, after projected to eigenvector
+    C<-as.matrix(ds)%*%evn  # %*% is for matrix multiplication
+    plot(x=C[,1], y=C[,2],xlab='mpg',ylab='cyl',main='standardized+projected to eigenvector')
+    abline(h=0,v=0)
+    
+# not sure if the matrix of eigen vector is already normalized
+nvec<-rep(0,evn%>%ncol)
+for (i in 1:(evn%>%ncol)){
+  nvec[i]<-evn[,i]^2 %>% sum %>% sqrt # get norm of each column
+}
+for (i in 1:(evn%>%ncol)){
+  evn[,i]<-evn[,i]/nvec[i] # normalize the matrix
+}
+
+# "C"
+# C=A*P ou X*P
+# A ou X matrice centree reduite, P matrice de vect propre reduite
+C<-as.matrix(ds)%*%evn  # %*% is for matrix multiplication
+
+
+
+# "eboulis"
+lam<-eigen$values
+inertie<-lam/sum(lam)
+inertiecum<-rep(1,lam%>%length)*inertie[1]
+for(i in 2:(lam%>%length)){
+  inertiecum[i]<-inertiecum[i-1]+inertie[i]
+}
+eboulis<-data.frame(lam,inertie,inertiecum)
+# ggplot
+xval=(1:(lam%>%length))%>%as.character
+tmp<-xval
+for(i in 1:(xval%>%length)){
+  xval[i]<-paste("lam",tmp[i])
+}
+remove(tmp)
+
+# issue of disorder of ggplot... the solution is combo of factor and levels
+eboulis<-data.frame(eboulis,xval)
+eboulis[,(eboulis%>%length)]<-factor(eboulis[,(eboulis%>%length)],levels=xval)
+ggplot(eboulis)+
+  geom_col(aes(x=eboulis$xval,y=lam),size=1,color="darkblue",fill="white")+
+  geom_line(aes(x=eboulis$xval,y=inertiecum*6,group=1))+geom_point(aes(x=xval,y=lam))+
+  scale_y_continuous(sec.axis = sec_axis(~./6,name="bar,percentage"))
+labs(x="Eigen value",y="Value of eigen value")
+# https://biostats.w.uib.no/overlaying-a-line-plot-and-a-column-plot/
+
+# "Projection"
+# projection in the principal plan, C1 and C2, see part "C", matrix C
+C1C2<-C[,1:2]%>%data.frame
+ggplot(C1C2,aes(x=C1C2[,1]*-1,y=C1C2[,2]*-1,label=rownames(C1C2)))+
+  geom_point()+
+  geom_text_repel()+
+  geom_hline(yintercept = 0, colour = "gray65") +
+  geom_vline(xintercept = 0, colour = "gray65")
+
+# circle of correlations
+# https://www.gastonsanchez.com/visually-enforced/how-to/2012/06/17/PCA-in-R/
+# function to create a circle
+circle <- function(center = c(0, 0), npoints = 100) {
+  r = 1
+  tt = seq(0, 2 * pi, length = npoints)
+  xx = center[1] + r * cos(tt)
+  yy = center[1] + r * sin(tt)
+  return(data.frame(x = xx, y = yy))
+}
+corcir = circle(c(0, 0), npoints = 100)
+
+# correlation
+dscor<-as.data.frame(cor(d, C))
+
+# data frame with arrows coordinates
+arrows = data.frame(x1 = rep(0,nrow(dscor)), y1 = rep(0,nrow(dscor)), x2 = dscor[,1]*-1, y2 = dscor[,2]*-1)
+
+# geom_path will do open circles
+ggplot() + geom_path(data = corcir, aes(x = x, y = y), colour = "gray65") + 
+  geom_segment(data = arrows, aes(x = x1, y = y1, xend = x2, yend = y2), colour = "gray65") + 
+  geom_text(data = dscor, aes(x = dscor[,1]*-1, y = dscor[,2]*-1, label = rownames(dscor))) + 
+  geom_hline(yintercept = 0, colour = "gray65") + 
+  geom_vline(xintercept = 0, colour = "gray65") + 
+  xlim(-1.1, 1.1) + ylim(-1.1, 1.1) + 
+  labs(x = "pc1 aixs", y = "pc2 axis") + 
+  ggtitle("Circle of correlations")
+```
