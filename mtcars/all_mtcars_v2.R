@@ -1,14 +1,9 @@
 # cf https://caoyang.tech/zh/post/pricinple-component-analysis/
 #--------------PCA analysis--------------
 library(dplyr)
-mtcars # let's take a look at the dataset. It will be outprinted in the console.
-
 mtcars_pca <- prcomp(select(mtcars, -c("vs", "am")),center = TRUE, scale = TRUE) 
-# the column vs and am are not very interesting for the analyse, so we will drop them.
 # select: select variables byby name. Negative values to drop variables.
 # if the first expression is negative, select() will automatically start with all variables
-# prcomp is the function of R for principal component analysis. With the parameter center=TRUE and scale=TRUE, the dateset will be standardized (centré réduit) automatically.
-# If you have any doubt of prcomp, I suggest you to go to the official documentation. 
 # cf: https://www.rdocumentation.org/packages/dplyr/versions/0.7.8/topics/select
 
 summary(mtcars_pca) 
@@ -26,12 +21,11 @@ ggbiplot(mtcars_pca, labels=rownames(mtcars), circle = TRUE,alpha=1) # with labe
 # regroup the cars with their countries
 mtcars_country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
 ggbiplot(mtcars_pca,ellipse=TRUE,  labels=rownames(mtcars), groups=mtcars_country)
-# with ellipse=TRUE, there will be ellipses on the graph, grouped by mtcars_country
+
 
 # the third and forth principal components
 ggbiplot(mtcars_pca,ellipse=TRUE,choices=c(3,4), alpha=1,  labels=rownames(mtcars), groups=mtcars_country)
-# With the parameter choices=c(3,4), it will show the third and the forth principal components, PC3 and PC4.
-# For those amoung you who are not familiar with R, c() is how we combine numbers (or strings) into vector.
+
 
 
 #--------------------hc-------------------
@@ -47,6 +41,19 @@ plot(hc)
 nbr_rectangle=4
 plot(hc)
 rect.hclust(hc,k=nbr_rectangle,border='red')
+
+
+#----------------barplot derniere page excel-------------------
+mtcars_princomp<-princomp(select(mtcars, -c("vs", "am")),cor=TRUE) # drop the column vs and am. cor=TRUE means use correlation matrix instead of the covariance matrix
+# official doc: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/princomp
+barplot(mtcars_princomp$loadings[,1],main='C1',col=1:9) # "gear" is not shown on the x axis. col is used for setting colors
+barplot(mtcars_princomp$loadings[,2],main='C2',col=1:9)
+
+#----------------kirby-----------------------------------
+select(mtcars, -c("vs", "am"))%>%stars(flip.labels=FALSE, key.loc = c(14,1))
+# documentation not found
+# flip.labels=FALSE: labels are now aligned horizontally
+# key.loc : show the wheel. c(14,1): its location (x and y coordinate)
 
 
 
